@@ -9,9 +9,9 @@ export default function Home() {
       <Card className="w-full max-w-md m-4 shadow-xl animate-fade-in-down">
         <CardHeader className="text-center">
           <div className="flex justify-center items-center mb-4">
-             <h1 className="text-5xl font-bold tracking-tighter text-primary font-headline">puntoyralla</h1>
+             <h1 className="text-5xl font-bold tracking-tighter text-primary font-headline">dotanddash</h1>
           </div>
-          <CardTitle className="text-3xl font-headline">Bienvenido a la Práctica de Código Morse</CardTitle>
+          <CardTitle className="text-3xl font-headline">Bienvenido a la app de Código Morse</CardTitle>
           <CardDescription className="text-lg text-muted-foreground pt-2">
             Tu viaje para dominar los puntos y las rayas comienza aquí.
           </CardDescription>

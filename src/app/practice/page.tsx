@@ -48,10 +48,11 @@ export default function PracticePage() {
         };
     }, [getNewWord]);
 
-    const processLetter = useCallback(() => {
+    const processLetter = useCallback((currentInput: string) => {
         if (!word || currentInput === '') return;
         const currentLetter = word[letterIndex];
         const correctCode = MORSE_CODE[currentLetter]?.code;
+
 
         if (currentInput === correctCode) {
             setDecodedWord(prev => prev + currentLetter);
@@ -76,7 +77,7 @@ export default function PracticePage() {
                 setFeedback({ message: `Pista: El mnemónico es '${mnemonic}'. Piensa en '${relatedWord}'.`, type: 'hint' });
             }
         }
-        setCurrentInput('');
+        setCurrentInput(''); // Clear input after processing
     }, [word, letterIndex, currentInput, attempts, toast]);
 
     const handlePressStart = async () => {
@@ -101,7 +102,13 @@ export default function PracticePage() {
         const symbol = pressDuration < SHORT_PRESS_MS ? '.' : '-';
         setCurrentInput(prev => prev + symbol);
 
-        pauseTimeout.current = setTimeout(processLetter, LETTER_PAUSE_MS);
+        // Clear any existing timeout to prevent processing too early
+        if (pauseTimeout.current) {
+            clearTimeout(pauseTimeout.current);
+        }
+
+        // Set a new timeout to process the letter after a pause
+        pauseTimeout.current = setTimeout(() => processLetter(currentInput + symbol), LETTER_PAUSE_MS);
     };
 
     const feedbackColor =
