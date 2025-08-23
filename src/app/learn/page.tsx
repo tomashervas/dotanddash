@@ -29,13 +29,14 @@ export default function LearnPage() {
   }, []);
 
   useEffect(() => {
+    // This now correctly runs only on the client-side
     getRandomLetter();
-  }, []);
+  }, [getRandomLetter]);
 
   const handleShowMnemonic = () => {
     if (!currentLetterData) return;
     setShowMnemonic(true);
-    setFeedback({ message: `Mnemonic: ${currentLetterData.mnemonic}`, color: 'text-blue-500' });
+    setFeedback({ message: `Mnemónico: ${currentLetterData.mnemonic}`, color: 'text-blue-500' });
     setTimeout(() => {
       getRandomLetter();
     }, 3000);
@@ -46,17 +47,17 @@ export default function LearnPage() {
     if (showMnemonic || !currentLetterData) return;
     
     if (inputValue.trim().toUpperCase() === currentLetterData.mnemonic.toUpperCase()) {
-      setFeedback({ message: 'Correct! Well done.', color: 'text-green-600' });
+      setFeedback({ message: '¡Correcto! Bien hecho.', color: 'text-green-600' });
       setTimeout(getRandomLetter, 1500);
     } else {
-      setFeedback({ message: "Not quite. Try again or ask for a hint!", color: 'text-destructive' });
+      setFeedback({ message: "No es correcto. ¡Inténtalo de nuevo o pide una pista!", color: 'text-destructive' });
     }
   };
 
   if (!currentLetterData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p>Loading...</p>
+        <p>Cargando...</p>
       </div>
     );
   }
@@ -72,8 +73,8 @@ export default function LearnPage() {
             </Link>
         </div>
         <CardHeader className="text-center pt-12">
-          <CardTitle className="text-3xl font-headline">Learn the Mnemonics</CardTitle>
-          <CardDescription>Type the mnemonic for the letter shown below.</CardDescription>
+          <CardTitle className="text-3xl font-headline">Aprende los Mnemónicos</CardTitle>
+          <CardDescription>Escribe el mnemónico para la letra que se muestra a continuación.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-6">
             <div className="bg-primary text-primary-foreground rounded-full w-40 h-40 flex items-center justify-center animate-fade-in-down">
@@ -85,11 +86,11 @@ export default function LearnPage() {
                     type="text"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="Enter mnemonic word..."
+                    placeholder="Introduce la palabra mnemónica..."
                     className="text-center text-lg h-12"
                     disabled={showMnemonic}
                 />
-                <Button type="submit" className="w-full h-12 text-lg" disabled={showMnemonic}>Check Answer</Button>
+                <Button type="submit" className="w-full h-12 text-lg" disabled={showMnemonic}>Comprobar Respuesta</Button>
             </form>
 
             {feedback.message && (
@@ -99,7 +100,7 @@ export default function LearnPage() {
             )}
             {showMnemonic && (
                  <p className="text-center text-muted-foreground">
-                    Related word: <strong>{currentLetterData.relatedWord}</strong>
+                    Palabra relacionada: <strong>{currentLetterData.relatedWord}</strong>
                  </p>
             )}
 
@@ -107,10 +108,10 @@ export default function LearnPage() {
         <CardFooter className="flex justify-between">
           <Button variant="outline" onClick={handleShowMnemonic} disabled={showMnemonic}>
             <Lightbulb className="mr-2 h-4 w-4" />
-            Show Mnemonic
+            Mostrar Mnemónico
           </Button>
           <Button variant="secondary" onClick={getRandomLetter}>
-             Next Letter
+             Siguiente Letra
             <SkipForward className="ml-2 h-4 w-4" />
           </Button>
         </CardFooter>

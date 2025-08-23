@@ -9,11 +9,11 @@ export default function Home() {
       <Card className="w-full max-w-md m-4 shadow-xl animate-fade-in-down">
         <CardHeader className="text-center">
           <div className="flex justify-center items-center mb-4">
-             <h1 className="text-5xl font-bold tracking-tighter text-primary font-headline">dotanddash</h1>
+             <h1 className="text-5xl font-bold tracking-tighter text-primary font-headline">puntoyralla</h1>
           </div>
-          <CardTitle className="text-3xl font-headline">Welcome to Morse Code Practice</CardTitle>
+          <CardTitle className="text-3xl font-headline">Bienvenido a la Práctica de Código Morse</CardTitle>
           <CardDescription className="text-lg text-muted-foreground pt-2">
-            Your journey to mastering the dots and dashes starts here.
+            Tu viaje para dominar los puntos y las rayas comienza aquí.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -21,13 +21,13 @@ export default function Home() {
             <Link href="/learn" passHref>
               <Button className="w-full py-8 text-xl transition-transform duration-200 hover:scale-105" size="lg" variant="default">
                 <BookOpen className="w-6 h-6 mr-3" />
-                Learn Morse
+                Aprender Morse
               </Button>
             </Link>
             <Link href="/practice" passHref>
               <Button className="w-full py-8 text-xl transition-transform duration-200 hover:scale-105" size="lg" variant="secondary">
                  <Code className="w-6 h-6 mr-3" />
-                Practice Morse
+                Practicar Morse
               </Button>
             </Link>
           </div>

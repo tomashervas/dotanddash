@@ -6,36 +6,36 @@ export type MorseSymbol = {
 };
 
 export const MORSE_CODE: Record<string, Omit<MorseSymbol, 'letter'>> = {
-  'A': { code: '.-', mnemonic: 'A-PART', relatedWord: 'Apple' },
-  'B': { code: '-...', mnemonic: 'BEA-ver-dam-dam', relatedWord: 'Boat' },
-  'C': { code: '-.-.', mnemonic: 'CO-ca-CO-la', relatedWord: 'Cat' },
-  'D': { code: '-..', mnemonic: 'DUM-my-my', relatedWord: 'Dog' },
-  'E': { code: '.', mnemonic: 'Eh', relatedWord: 'Eye' },
-  'F': { code: '..-.', mnemonic: 'did-it-FAIL-again', relatedWord: 'Fire' },
-  'G': { code: '--.', mnemonic: 'GOOD-GOD-almighty', relatedWord: 'Goat' },
-  'H': { code: '....', mnemonic: 'hip-pi-ty-hop', relatedWord: 'Hat' },
-  'I': { code: '..', mnemonic: 'I-vy', relatedWord: 'Ice' },
-  'J': { code: '.---', mnemonic: 'in-JU-RY-LAW', relatedWord: 'Jet' },
-  'K': { code: '-.-', mnemonic: 'KAN-ga-ROO', relatedWord: 'Kite' },
-  'L': { code: '.-..', mnemonic: 'a-LIT-tle-bit', relatedWord: 'Lion' },
-  'M': { code: '--', mnemonic: 'MA-MA', relatedWord: 'Moon' },
-  'N': { code: '-.', mnemonic: 'NA-vy', relatedWord: 'Nest' },
-  'O': { code: '---', mnemonic: 'OH-MY-GOD', relatedWord: 'Orange' },
-  'P': { code: '.--.', mnemonic: 'a-PI-AN-o', relatedWord: 'Pig' },
-  'Q': { code: '--.-', mnemonic: 'GOD-SAVE-THE-queen', relatedWord: 'Queen' },
-  'R': { code: '.-.', mnemonic: 'ro-TA-tion', relatedWord: 'Rabbit' },
-  'S': { code: '...', mnemonic: 'si-si-si', relatedWord: 'Sun' },
-  'T': { code: '-', mnemonic: 'Tea', relatedWord: 'Tree' },
-  'U': { code: '..-', mnemonic: 'u-ni-FORM', relatedWord: 'Umbrella' },
-  'V': { code: '...-', mnemonic: 'va-ca-tion-TIME', relatedWord: 'Violin' },
-  'W': { code: '.--', mnemonic: 'what-A-MESS', relatedWord: 'Whale' },
-  'X': { code: '-..-', mnemonic: 'X-marks-the-SPOT', relatedWord: 'Xylophone' },
-  'Y': { code: '-.--', mnemonic: 'WHY-oh-WHY-oh', relatedWord: 'Yacht' },
-  'Z': { code: '--..', mnemonic: 'ZINC-ZOO-keeper', relatedWord: 'Zebra' },
+  'A': { code: '.-', mnemonic: 'A-ZUL', relatedWord: 'Avión' },
+  'B': { code: '-...', mnemonic: 'BO-ni-ta-ni-ña', relatedWord: 'Barco' },
+  'C': { code: '-.-.', mnemonic: 'CO-ca-CO-la', relatedWord: 'Casa' },
+  'D': { code: '-..', mnemonic: 'DOY-li-la', relatedWord: 'Dedo' },
+  'E': { code: '.', mnemonic: 'Es', relatedWord: 'Elefante' },
+  'F': { code: '..-.', mnemonic: 'fu-ma-FEO-si', relatedWord: 'Faro' },
+  'G': { code: '--.', mnemonic: 'GO-TA-GOL', relatedWord: 'Gato' },
+  'H': { code: '....', mnemonic: 'hi-pi-pi-pi', relatedWord: 'Huevo' },
+  'I': { code: '..', mnemonic: 'I-sla', relatedWord: 'Iglesia' },
+  'J': { code: '.---', mnemonic: 'ja-BON-JABON-JABON', relatedWord: 'Jirafa' },
+  'K': { code: '-.-', mnemonic: 'KOR-pi-KOL', relatedWord: 'Koala' },
+  'L': { code: '.-..', mnemonic: 'li-MON-ci-to', relatedWord: 'Lápiz' },
+  'M': { code: '--', mnemonic: 'MO-MO', relatedWord: 'Mano' },
+  'N': { code: '-.', mnemonic: 'NO-che', relatedWord: 'Nido' },
+  'O': { code: '---', mnemonic: 'OH-DIOS-MIO', relatedWord: 'Ojo' },
+  'P': { code: '.--.', mnemonic: 'pi-SO-PI-so', relatedWord: 'Perro' },
+  'Q': { code: '--.-', mnemonic: 'QUE-COS-TAN-CARO', relatedWord: 'Queso' },
+  'R': { code: '.-.', mnemonic: 'ra-MA-da', relatedWord: 'Ratón' },
+  'S': { code: '...', mnemonic: 'si-si-si', relatedWord: 'Sol' },
+  'T': { code: '-', mnemonic: 'Te', relatedWord: 'Taza' },
+  'U': { code: '..-', mnemonic: 'u-ni-CO', relatedWord: 'Uva' },
+  'V': { code: '...-', mnemonic: 'ven-ti-la-DOR', relatedWord: 'Vela' },
+  'W': { code: '.--', mnemonic: 'what-A-SHOW', relatedWord: 'Wafle' },
+  'X': { code: '-..-', mnemonic: 'X-en-la-FREN-te', relatedWord: 'Xilófono' },
+  'Y': { code: '-.--', mnemonic: 'YO-soy-YO-soy', relatedWord: 'Yate' },
+  'Z': { code: '--..', mnemonic: 'ZOR-RO-ma-lo', relatedWord: 'Zanahoria' },
 };
 
 export const ALPHABET = Object.keys(MORSE_CODE);
 
 export const PRACTICE_WORDS = [
-    "HELLO", "WORLD", "NEXTJS", "REACT", "CODE", "PRACTICE", "MORSE", "DOT", "DASH", "WATER", "EARTH", "AGENT", "FIREBASE", "STUDIO", "SOUND"
+    "HOLA", "MUNDO", "CODIGO", "PRACTICA", "MORSE", "PUNTO", "RAYA", "AGUA", "TIERRA", "AGENTE", "FUEGO", "SONIDO", "CASA", "JUEGO", "LUZ"
 ];

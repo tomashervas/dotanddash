@@ -42,11 +42,12 @@ export default function PracticePage() {
 
     useEffect(() => {
         toneSynth.current = new Tone.Synth().toDestination();
+        // This now correctly runs only on the client-side
         getNewWord();
         return () => {
             toneSynth.current?.dispose();
         };
-    }, []);
+    }, [getNewWord]);
 
     const processLetter = useCallback(() => {
         if (!word || currentInput === '') return;
@@ -55,25 +56,25 @@ export default function PracticePage() {
 
         if (currentInput === correctCode) {
             setDecodedWord(prev => prev + currentLetter);
-            setFeedback({ message: `Correct!`, type: 'success' });
+            setFeedback({ message: `¡Correcto!`, type: 'success' });
             setLetterIndex(prev => prev + 1);
             setAttempts(0);
             if (letterIndex + 1 === word.length) {
                 setIsComplete(true);
-                setFeedback({ message: `Word Complete: ${word}!`, type: 'success' });
+                setFeedback({ message: `Palabra Completa: ¡${word}!`, type: 'success' });
                  toast({
-                    title: "Congratulations!",
-                    description: `You successfully typed "${word}" in Morse code.`,
+                    title: "¡Felicidades!",
+                    description: `Has escrito correctamente "${word}" en código Morse.`,
                  })
             }
         } else {
             const newAttempts = attempts + 1;
             setAttempts(newAttempts);
-            setFeedback({ message: `Incorrect. Try again.`, type: 'error' });
+            setFeedback({ message: `Incorrecto. Inténtalo de nuevo.`, type: 'error' });
             if (newAttempts >= 2) {
                 const mnemonic = MORSE_CODE[currentLetter]?.mnemonic;
                 const relatedWord = MORSE_CODE[currentLetter]?.relatedWord;
-                setFeedback({ message: `Hint: Mnemonic is '${mnemonic}'. Think '${relatedWord}'.`, type: 'hint' });
+                setFeedback({ message: `Pista: El mnemónico es '${mnemonic}'. Piensa en '${relatedWord}'.`, type: 'hint' });
             }
         }
         setCurrentInput('');
@@ -115,23 +116,23 @@ export default function PracticePage() {
             <Card className="w-full max-w-2xl shadow-xl relative">
                 <div className="absolute top-4 left-4">
                     <Link href="/" passHref>
-                        <Button variant="ghost" size="icon" aria-label="Back to home">
+                        <Button variant="ghost" size="icon" aria-label="Volver al inicio">
                             <ArrowLeft className="h-6 w-6" />
                         </Button>
                     </Link>
                 </div>
                 <CardHeader className="text-center pt-12">
-                    <CardTitle className="text-3xl font-headline">Practice Morse</CardTitle>
-                    <CardDescription>Tap out the word below. Short press for a dot, long for a dash.</CardDescription>
+                    <CardTitle className="text-3xl font-headline">Practicar Morse</CardTitle>
+                    <CardDescription>Teclea la palabra de abajo. Pulsación corta para punto, larga para raya.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center gap-4">
                     <div className="w-full p-4 border rounded-lg bg-muted min-h-[120px] flex flex-col justify-center items-center text-center">
-                        <p className="text-sm text-muted-foreground">WORD TO TYPE</p>
+                        <p className="text-sm text-muted-foreground">PALABRA A ESCRIBIR</p>
                         <p className="text-5xl font-bold tracking-widest font-headline">{word}</p>
                     </div>
 
                     <div className="w-full p-4 border rounded-lg bg-background min-h-[120px] flex flex-col justify-center items-center text-center">
-                        <p className="text-sm text-muted-foreground">YOUR INPUT</p>
+                        <p className="text-sm text-muted-foreground">TU ENTRADA</p>
                         <p className="text-3xl font-mono text-primary min-h-[40px]">
                             <span className="text-foreground">{decodedWord}</span>
                             <span className="text-muted-foreground">{word.substring(decodedWord.length)}</span>
@@ -150,15 +151,15 @@ export default function PracticePage() {
                         disabled={isComplete}
                     >
                         <Ear className="w-10 h-10 mr-4" />
-                        TAP HERE
+                        PULSA AQUÍ
                     </Button>
 
                 </CardContent>
                 <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                     <p className={cn("font-semibold h-6", feedbackColor)}>{feedback.message || "A 1-second pause separates letters."}</p>
+                     <p className={cn("font-semibold h-6", feedbackColor)}>{feedback.message || "Una pausa de 1 segundo separa las letras."}</p>
                      <Button variant="secondary" onClick={getNewWord}>
                         <RefreshCw className="mr-2 h-4 w-4" />
-                        New Word
+                        Nueva Palabra
                     </Button>
                 </CardFooter>
             </Card>
