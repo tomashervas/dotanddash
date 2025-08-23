@@ -17,6 +17,7 @@ const LETTER_PAUSE_MS = 1000;
 export default function PracticePage() {
     const [word, setWord] = useState('');
     const [letterIndex, setLetterIndex] = useState(0);
+    const [isPressing, setIsPressing] = useState(false);
     const [currentInput, setCurrentInput] = useState('');
     const [decodedWord, setDecodedWord] = useState('');
     const [feedback, setFeedback] = useState({ message: '', type: '' });
@@ -28,6 +29,7 @@ export default function PracticePage() {
     const pressStart = useRef<number | null>(null);
     const pauseTimeout = useRef<NodeJS.Timeout | null>(null);
     const toneSynth = useRef<Tone.Synth | null>(null);
+    const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
     const getNewWord = useCallback(() => {
         const newWord = PRACTICE_WORDS[Math.floor(Math.random() * PRACTICE_WORDS.length)];
@@ -78,15 +80,20 @@ export default function PracticePage() {
             }
         }
         setCurrentInput(''); // Clear input after processing
-    }, [word, letterIndex, currentInput, attempts, toast]);
+    }, [word, letterIndex, attempts, toast]);
 
-    const handlePressStart = async () => {
+    const handlePressStart = async () => { // Use client-side state to prevent hydration mismatches
+        if (isPressing) return; // Ignore if already pressing
         if (isComplete) return;
         if(Tone.context.state !== 'running') {
             await Tone.start();
         }
+        // pressStart.current = null; // Moved reset to start of handlePressStart logic block
+        setIsPressing(true); // Set pressing flag at the start
         pressStart.current = Date.now();
         toneSynth.current?.triggerAttack("C4");
+        // Clear any existing pause or debounce timeouts on a new press
+        if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
         if (pauseTimeout.current) {
             clearTimeout(pauseTimeout.current);
             pauseTimeout.current = null;
@@ -94,21 +101,30 @@ export default function PracticePage() {
     };
 
     const handlePressEnd = () => {
-        if (isComplete || !pressStart.current) return;
+        // Clear any pending debounced call
+        if (debounceTimeout.current) {
+            clearTimeout(debounceTimeout.current);
+        }
+
+        // Set a new debounce timeout
+        debounceTimeout.current = setTimeout(() => {
+        if (isComplete || !pressStart.current) return; // No need to check isPressing here, as it's set to false below
         const pressDuration = Date.now() - pressStart.current;
         pressStart.current = null;
         toneSynth.current?.triggerRelease();
 
         const symbol = pressDuration < SHORT_PRESS_MS ? '.' : '-';
-        setCurrentInput(prev => prev + symbol);
+        const updatedInput = currentInput + symbol;
+        setCurrentInput(updatedInput);
 
         // Clear any existing timeout to prevent processing too early
         if (pauseTimeout.current) {
             clearTimeout(pauseTimeout.current);
         }
-
         // Set a new timeout to process the letter after a pause
-        pauseTimeout.current = setTimeout(() => processLetter(currentInput + symbol), LETTER_PAUSE_MS);
+        setIsPressing(false); // Reset pressing flag at the end of processing a symbol
+        pauseTimeout.current = setTimeout(() => processLetter(updatedInput), LETTER_PAUSE_MS);
+        }, 50); // Debounce delay, adjust as needed
     };
 
     const feedbackColor =
