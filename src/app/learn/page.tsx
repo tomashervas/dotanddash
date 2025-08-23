@@ -36,7 +36,7 @@ export default function LearnPage() {
   const handleShowMnemonic = () => {
     if (!currentLetterData) return;
     setShowMnemonic(true);
-    setFeedback({ message: `Mnemónico: ${currentLetterData.mnemonic}`, color: 'text-blue-500' });
+    setFeedback({ message: `Mnemónico: ${currentLetterData.mnemonic}`, color: 'text-accent-foreground' });
     setTimeout(() => {
       getRandomLetter();
     }, 3000);
