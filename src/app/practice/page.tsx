@@ -42,7 +42,6 @@ export default function PracticePage() {
 
     useEffect(() => {
         toneSynth.current = new Tone.Synth().toDestination();
-        // This now correctly runs only on the client-side
         getNewWord();
         return () => {
             toneSynth.current?.dispose();
@@ -108,7 +107,7 @@ export default function PracticePage() {
     const feedbackColor =
         feedback.type === 'success' ? 'text-green-500' :
         feedback.type === 'error' ? 'text-destructive' :
-        feedback.type === 'hint' ? 'text-blue-500' :
+        feedback.type === 'hint' ? 'text-accent-foreground' :
         'text-muted-foreground';
 
     return (
@@ -135,9 +134,8 @@ export default function PracticePage() {
                         <p className="text-sm text-muted-foreground">TU ENTRADA</p>
                         <p className="text-3xl font-mono text-primary min-h-[40px]">
                             <span className="text-foreground">{decodedWord}</span>
-                            <span className="text-muted-foreground">{word.substring(decodedWord.length)}</span>
                         </p>
-                        <p className="text-4xl font-mono text-blue-500 min-h-[40px] animate-pulse">
+                        <p className="text-4xl font-mono text-primary min-h-[40px] animate-pulse">
                             {currentInput || "..."}
                         </p>
                     </div>
