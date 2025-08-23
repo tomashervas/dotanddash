@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, type FormEvent } from 'react';
@@ -29,7 +30,7 @@ export default function LearnPage() {
 
   useEffect(() => {
     getRandomLetter();
-  }, [getRandomLetter]);
+  }, []);
 
   const handleShowMnemonic = () => {
     if (!currentLetterData) return;

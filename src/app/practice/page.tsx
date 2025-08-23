@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -45,7 +46,7 @@ export default function PracticePage() {
         return () => {
             toneSynth.current?.dispose();
         };
-    }, [getNewWord]);
+    }, []);
 
     const processLetter = useCallback(() => {
         if (!word || currentInput === '') return;
