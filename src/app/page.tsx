@@ -1,8 +1,8 @@
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import { Code, BookOpen, List } from 'lucide-react';
-
+import { Globe } from 'lucide-react';
 export default function Home() {
   return (
     <main className="flex items-center justify-center min-h-screen bg-grid-slate-100/[0.05] dark:bg-grid-slate-900/[0.05]">
@@ -11,7 +11,7 @@ export default function Home() {
           <div className="flex justify-center items-center mb-4">
              <h1 className="text-5xl font-bold tracking-tighter text-primary font-headline">dotanddash</h1>
           </div>
-          <CardTitle className="text-3xl font-headline">Bienvenido a la app para aprender Código Morse</CardTitle>
+          <CardTitle className="text-2xl font-headline">Bienvenido a la app para aprender Código Morse</CardTitle>
           <CardDescription className="text-lg text-muted-foreground pt-2">
             Tu viaje para dominar los puntos y las rayas comienza aquí.
           </CardDescription>
@@ -38,6 +38,10 @@ export default function Home() {
             </Link>
           </div>
         </CardContent>
+        <CardFooter>
+          <p className='text-md text-muted-foreground'>Made with <span> ❤️ </span> for my dear son Marcel</p>
+          <a href="http://josetomashervas.com" className='text-blue-500 text-md hover:underline' >Jose Tomás Hervás <Globe className="inline-block w-4 h-4 ml-1" /></a>
+      </CardFooter>
       </Card>
     </main>
   );

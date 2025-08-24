@@ -61,10 +61,21 @@ export default function PracticePage() {
             setFeedback({ message: `¡Correcto!`, type: 'success' });
             setLetterIndex(prev => prev + 1);
             setAttempts(0);
+
+            if (toneSynth.current) {
+                toneSynth.current.triggerAttackRelease("E5", "8n"); 
+            }
+
             if (letterIndex + 1 === word.length) {
                 setIsComplete(true);
                 setFeedback({ message: `Palabra Completa: ¡${word}!`, type: 'success' });
-                 toast({
+                
+                const now = Tone.now();
+                toneSynth.current?.triggerAttackRelease("C5", "8n", now);
+                toneSynth.current?.triggerAttackRelease("E5", "8n", now + 0.2);
+                toneSynth.current?.triggerAttackRelease("G5", "8n", now + 0.4);
+                
+                toast({
                     title: "¡Felicidades!",
                     description: `Has escrito correctamente "${word}" en código Morse.`,
                  })
@@ -73,6 +84,11 @@ export default function PracticePage() {
             const newAttempts = attempts + 1;
             setAttempts(newAttempts);
             setFeedback({ message: `Incorrecto. Inténtalo de nuevo.`, type: 'error' });
+            
+            if (toneSynth.current) {
+                toneSynth.current.triggerAttackRelease("C3", "8n"); 
+            }
+            
             if (newAttempts >= 2) {
                 const mnemonic = MORSE_CODE[currentLetter]?.mnemonic;
                 setFeedback({ message: `Pista: El mnemónico es '${mnemonic}'.`, type: 'hint' });

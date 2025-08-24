@@ -1,13 +1,14 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, type FormEvent } from 'react';
+import { useState, useEffect, useCallback, type FormEvent, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ALPHABET, MORSE_CODE, type MorseSymbol } from "@/lib/morse";
 import { ArrowLeft, Lightbulb, SkipForward } from 'lucide-react';
 import Link from 'next/link';
+import * as Tone from 'tone';
 
 type LetterData = MorseSymbol;
 
@@ -17,6 +18,14 @@ export default function LearnPage() {
   const [feedback, setFeedback] = useState({ message: '', color: '' });
   const [showMnemonic, setShowMnemonic] = useState(false);
   const [key, setKey] = useState(0);
+ const toneSynth = useRef<Tone.Synth | null>(null);
+
+  useEffect(() => {
+    toneSynth.current = new Tone.Synth().toDestination();
+    return () => {
+      toneSynth.current?.dispose();
+    };
+  }, []);
 
   const getRandomLetter = useCallback(() => {
     const randomLetter = ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
@@ -47,9 +56,20 @@ export default function LearnPage() {
     if (showMnemonic || !currentLetterData) return;
     
     if (inputValue.trim().toUpperCase() === currentLetterData.mnemonic.toUpperCase()) {
+      
+      
       setFeedback({ message: '¡Correcto! Bien hecho.', color: 'text-green-600' });
       setTimeout(getRandomLetter, 1500);
+
+      const now = Tone.now();
+      toneSynth.current?.triggerAttackRelease("C5", "8n", now);
+      toneSynth.current?.triggerAttackRelease("E5", "8n", now + 0.2);
+      toneSynth.current?.triggerAttackRelease("G5", "8n", now + 0.4);
+      
     } else {
+      const now = Tone.now();
+      toneSynth.current?.triggerAttackRelease("F3", "8n", now);
+      toneSynth.current?.triggerAttackRelease("C3", "8n", now + 0.2);
       setFeedback({ message: "No es correcto. ¡Inténtalo de nuevo o pide una pista!", color: 'text-destructive' });
     }
   };
