@@ -98,11 +98,6 @@ export default function LearnPage() {
                     {feedback.message}
                 </p>
             )}
-            {showMnemonic && (
-                 <p className="text-center text-muted-foreground">
-                    Palabra relacionada: <strong>{currentLetterData.relatedWord}</strong>
-                 </p>
-            )}
 
         </CardContent>
         <CardFooter className="flex justify-between">

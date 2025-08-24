@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
-const SHORT_PRESS_MS = 200;
+const SHORT_PRESS_MS = 300;
 const LETTER_PAUSE_MS = 1000;
 
 export default function PracticePage() {
@@ -75,8 +75,7 @@ export default function PracticePage() {
             setFeedback({ message: `Incorrecto. Inténtalo de nuevo.`, type: 'error' });
             if (newAttempts >= 2) {
                 const mnemonic = MORSE_CODE[currentLetter]?.mnemonic;
-                const relatedWord = MORSE_CODE[currentLetter]?.relatedWord;
-                setFeedback({ message: `Pista: El mnemónico es '${mnemonic}'. Piensa en '${relatedWord}'.`, type: 'hint' });
+                setFeedback({ message: `Pista: El mnemónico es '${mnemonic}'.`, type: 'hint' });
             }
         }
         setCurrentInput(''); // Clear input after processing
@@ -144,7 +143,7 @@ export default function PracticePage() {
                     </Link>
                 </div>
                 <CardHeader className="text-center pt-12">
-                    <CardTitle className="text-3xl font-headline">Practicar Morse</CardTitle>
+                    <CardTitle className="text-3xl font-headline">Practica el código Morse</CardTitle>
                     <CardDescription>Teclea la palabra de abajo. Pulsación corta para punto, larga para raya.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center gap-4">

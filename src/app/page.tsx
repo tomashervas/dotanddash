@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
-import { Code, BookOpen } from 'lucide-react';
+import { Code, BookOpen, List } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -11,7 +11,7 @@ export default function Home() {
           <div className="flex justify-center items-center mb-4">
              <h1 className="text-5xl font-bold tracking-tighter text-primary font-headline">dotanddash</h1>
           </div>
-          <CardTitle className="text-3xl font-headline">Bienvenido a la app de Código Morse</CardTitle>
+          <CardTitle className="text-3xl font-headline">Bienvenido a la app para aprender Código Morse</CardTitle>
           <CardDescription className="text-lg text-muted-foreground pt-2">
             Tu viaje para dominar los puntos y las rayas comienza aquí.
           </CardDescription>
@@ -28,6 +28,12 @@ export default function Home() {
               <Button className="w-full py-8 text-xl transition-transform duration-200 hover:scale-105" size="lg" variant="secondary">
                  <Code className="w-6 h-6 mr-3" />
                 Practicar Morse
+              </Button>
+            </Link>
+            <Link href="/list" passHref>
+              <Button className="w-full py-8 text-xl transition-transform duration-200 hover:scale-105" size="lg" variant="outline">
+                 <List className="w-6 h-6 mr-3" />
+                Listado de Símbolos
               </Button>
             </Link>
           </div>
