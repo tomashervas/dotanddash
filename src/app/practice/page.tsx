@@ -17,7 +17,6 @@ const LETTER_PAUSE_MS = 1000;
 export default function PracticePage() {
     const [word, setWord] = useState('');
     const [letterIndex, setLetterIndex] = useState(0);
-    const [isPressing, setIsPressing] = useState(false);
     const [currentInput, setCurrentInput] = useState('');
     const [decodedWord, setDecodedWord] = useState('');
     const [feedback, setFeedback] = useState({ message: '', type: '' });
@@ -27,9 +26,8 @@ export default function PracticePage() {
     const { toast } = useToast();
 
     const pressStart = useRef<number | null>(null);
-    const pauseTimeout = useRef<NodeJS.Timeout | null>(null);
+    const letterTimeout = useRef<NodeJS.Timeout | null>(null);
     const toneSynth = useRef<Tone.Synth | null>(null);
-    const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
     const getNewWord = useCallback(() => {
         const newWord = PRACTICE_WORDS[Math.floor(Math.random() * PRACTICE_WORDS.length)];
@@ -40,6 +38,7 @@ export default function PracticePage() {
         setFeedback({ message: '', type: '' });
         setAttempts(0);
         setIsComplete(false);
+        if (letterTimeout.current) clearTimeout(letterTimeout.current);
     }, []);
 
     useEffect(() => {
@@ -47,99 +46,81 @@ export default function PracticePage() {
         getNewWord();
         return () => {
             toneSynth.current?.dispose();
+            if (letterTimeout.current) clearTimeout(letterTimeout.current);
         };
     }, [getNewWord]);
 
-    const processLetter = useCallback((currentInput: string) => {
+    const processInput = useCallback(() => {
         if (!word || currentInput === '') return;
+
         const currentLetter = word[letterIndex];
         const correctCode = MORSE_CODE[currentLetter]?.code;
 
-
         if (currentInput === correctCode) {
             setDecodedWord(prev => prev + currentLetter);
-            setFeedback({ message: `¡Correcto!`, type: 'success' });
+            setFeedback({ message: `¡Letra '${currentLetter}' Correcta!`, type: 'success' });
             setLetterIndex(prev => prev + 1);
             setAttempts(0);
 
-            if (toneSynth.current) {
-                toneSynth.current.triggerAttackRelease("E5", "8n"); 
-            }
-
             if (letterIndex + 1 === word.length) {
                 setIsComplete(true);
-                setFeedback({ message: `Palabra Completa: ¡${word}!`, type: 'success' });
-                
+                setFeedback({ message: `¡Palabra "${word}" completada!`, type: 'success' });
+                 toast({
+                    title: "¡Felicidades!",
+                    description: `Has escrito correctamente "${word}" en código Morse.`,
+                 });
                 const now = Tone.now();
                 toneSynth.current?.triggerAttackRelease("C5", "8n", now);
                 toneSynth.current?.triggerAttackRelease("E5", "8n", now + 0.2);
                 toneSynth.current?.triggerAttackRelease("G5", "8n", now + 0.4);
-                
-                toast({
-                    title: "¡Felicidades!",
-                    description: `Has escrito correctamente "${word}" en código Morse.`,
-                 })
             }
         } else {
-            const newAttempts = attempts + 1;
-            setAttempts(newAttempts);
             setFeedback({ message: `Incorrecto. Inténtalo de nuevo.`, type: 'error' });
-            
-            if (toneSynth.current) {
-                toneSynth.current.triggerAttackRelease("C3", "8n"); 
-            }
-            
-            if (newAttempts >= 2) {
+            setAttempts(prev => prev + 1);
+            toneSynth.current?.triggerAttackRelease("C3", "2n");
+
+            if (attempts + 1 >= 2) {
                 const mnemonic = MORSE_CODE[currentLetter]?.mnemonic;
-                setFeedback({ message: `Pista: El mnemónico es '${mnemonic}'.`, type: 'hint' });
+                const hint = `Pista para la letra '${currentLetter}': ${mnemonic}`;
+                setFeedback({ message: hint, type: 'hint' });
             }
         }
-        setCurrentInput(''); // Clear input after processing
-    }, [word, letterIndex, attempts, toast]);
+        setCurrentInput('');
+    }, [word, letterIndex, currentInput, attempts, toast]);
 
-    const handlePressStart = async () => { // Use client-side state to prevent hydration mismatches
-        if (isPressing) return; // Ignore if already pressing
+    useEffect(() => {
+        if (letterTimeout.current) {
+            clearTimeout(letterTimeout.current);
+        }
+        if (currentInput !== '') {
+            letterTimeout.current = setTimeout(() => {
+                processInput();
+            }, LETTER_PAUSE_MS);
+        }
+    }, [currentInput, processInput]);
+
+
+    const handlePressStart = async () => {
         if (isComplete) return;
-        if(Tone.context.state !== 'running') {
+        if (Tone.context.state !== 'running') {
             await Tone.start();
         }
-        // pressStart.current = null; // Moved reset to start of handlePressStart logic block
-        setIsPressing(true); // Set pressing flag at the start
-        pressStart.current = Date.now();
-        toneSynth.current?.triggerAttack("C4");
-        // Clear any existing pause or debounce timeouts on a new press
-        if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-        if (pauseTimeout.current) {
-            clearTimeout(pauseTimeout.current);
-            pauseTimeout.current = null;
+        if (letterTimeout.current) {
+            clearTimeout(letterTimeout.current);
         }
+        pressStart.current = Date.now();
+        toneSynth.current?.triggerAttack("700hz");
     };
 
     const handlePressEnd = () => {
-        // Clear any pending debounced call
-        if (debounceTimeout.current) {
-            clearTimeout(debounceTimeout.current);
-        }
-
-        // Set a new debounce timeout
-        debounceTimeout.current = setTimeout(() => {
-        if (isComplete || !pressStart.current) return; // No need to check isPressing here, as it's set to false below
+        if (isComplete || !pressStart.current) return;
+        
         const pressDuration = Date.now() - pressStart.current;
         pressStart.current = null;
         toneSynth.current?.triggerRelease();
 
         const symbol = pressDuration < SHORT_PRESS_MS ? '.' : '-';
-        const updatedInput = currentInput + symbol;
-        setCurrentInput(updatedInput);
-
-        // Clear any existing timeout to prevent processing too early
-        if (pauseTimeout.current) {
-            clearTimeout(pauseTimeout.current);
-        }
-        // Set a new timeout to process the letter after a pause
-        setIsPressing(false); // Reset pressing flag at the end of processing a symbol
-        pauseTimeout.current = setTimeout(() => processLetter(updatedInput), LETTER_PAUSE_MS);
-        }, 50); // Debounce delay, adjust as needed
+        setCurrentInput(prev => prev + symbol);
     };
 
     const feedbackColor =
@@ -170,20 +151,21 @@ export default function PracticePage() {
 
                     <div className="w-full p-4 border rounded-lg bg-background min-h-[120px] flex flex-col justify-center items-center text-center">
                         <p className="text-sm text-muted-foreground">TU ENTRADA</p>
-                        <p className="text-3xl font-mono text-primary min-h-[40px]">
-                            <span className="text-foreground">{decodedWord}</span>
+                         <p className="text-3xl font-mono text-foreground min-h-[40px] tracking-widest">
+                            {decodedWord}
+                            <span className="text-primary animate-pulse">{currentInput}</span>
                         </p>
-                        <p className="text-4xl font-mono text-primary min-h-[40px] animate-pulse">
-                            {currentInput || "..."}
+                        <p className="text-lg text-muted-foreground">
+                            Letra actual: {letterIndex + 1} de {word.length}
                         </p>
                     </div>
 
                     <Button
                         onMouseDown={handlePressStart}
                         onMouseUp={handlePressEnd}
-                        onTouchStart={handlePressStart}
-                        onTouchEnd={handlePressEnd}
-                        className="w-full h-40 text-2xl font-bold rounded-lg bg-primary hover:bg-primary/90 active:scale-95 transition-transform duration-150 select-none"
+                        onTouchStart={(e) => { e.preventDefault(); handlePressStart(); }}
+                        onTouchEnd={(e) => { e.preventDefault(); handlePressEnd(); }}
+                        className="w-full h-40 text-2xl font-bold rounded-lg bg-primary hover:bg-primary/90 active:scale-95 transition-transform duration-150 select-none touch-manipulation"
                         disabled={isComplete}
                     >
                         <Ear className="w-10 h-10 mr-4" />
@@ -192,7 +174,7 @@ export default function PracticePage() {
 
                 </CardContent>
                 <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                     <p className={cn("font-semibold h-6", feedbackColor)}>{feedback.message || "Una pausa de 1 segundo separa las letras."}</p>
+                     <p className={cn("font-semibold h-6", feedbackColor)}>{feedback.message || "Una pausa de 1 segundo procesa la letra."}</p>
                      <Button variant="secondary" onClick={getNewWord}>
                         <RefreshCw className="mr-2 h-4 w-4" />
                         Nueva Palabra
