@@ -24,7 +24,7 @@ type HighScore = { name: string; score: number };
 export default function BattlePage() {
     const [word, setWord] = useState('');
     const [isComplete, setIsComplete] = useState(false);
-    const { toast } = useToast();
+    const { toast, dismiss } = useToast();
 
     // Player state
     const [players, setPlayers] = useState({ player1: 'Jugador 1', player2: 'Jugador 2' });
@@ -128,7 +128,7 @@ export default function BattlePage() {
                 setScores(newScores);
 
                  if (playerToastId.current) {
-                    toast.dismiss(playerToastId.current);
+                    dismiss(playerToastId.current);
                 }
                 const { id } = toast({
                     title: "¡Ronda Ganada!",
@@ -147,7 +147,7 @@ export default function BattlePage() {
         
         setPlayerInputs(prev => ({...prev, [`player${player}`]: ''}));
 
-    }, [word, playerInputs, letterIndices, decodedWords, players, scores, getNewWord, toast, highScore]);
+    }, [word, playerInputs, letterIndices, decodedWords, players, scores, getNewWord, toast, highScore, dismiss]);
 
     useEffect(() => {
         if (letterTimeout.current) {
