@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
-import { Code, BookOpen, List, Eye, Ear } from 'lucide-react';
+import { Code, BookOpen, List, Eye, Ear, Sword } from 'lucide-react';
 import { Globe } from 'lucide-react';
 export default function Home() {
   return (
@@ -40,6 +40,12 @@ export default function Home() {
               <Button className="w-full py-8 text-xl transition-transform duration-200 hover:scale-105" size="lg" variant="secondary">
                  <Eye className="w-6 h-6 mr-3" />
                 Practicar Lectura
+              </Button>
+            </Link>
+            <Link href="/games" passHref>
+               <Button className="w-full py-8 text-xl transition-transform duration-200 hover:scale-105" size="lg" variant="outline">
+                 <Sword className="w-6 h-6 mr-3" />
+                Juegos
               </Button>
             </Link>
             <Link href="/list" passHref>
