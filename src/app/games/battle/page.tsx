@@ -29,7 +29,6 @@ export default function BattlePage() {
     // Player state
     const [players, setPlayers] = useState({ player1: 'Jugador 1', player2: 'Jugador 2' });
     const [scores, setScores] = useState<Scores>({ player1: 0, player2: 0 });
-    const [activePlayer, setActivePlayer] = useState<Player | null>(null);
     const [playerInputs, setPlayerInputs] = useState({ player1: '', player2: '' });
     const [decodedWords, setDecodedWords] = useState({ player1: '', player2: '' });
     const [letterIndices, setLetterIndices] = useState({ player1: 0, player2: 0 });
@@ -42,8 +41,8 @@ export default function BattlePage() {
     const [player1Name, setPlayer1Name] = useState('');
     const [player2Name, setPlayer2Name] = useState('');
 
-    const pressStart = useRef<number | null>(null);
-    const letterTimeout = useRef<NodeJS.Timeout | null>(null);
+    const pressStartTimes = useRef<{ player1: number | null, player2: number | null }>({ player1: null, player2: null });
+    const letterTimeouts = useRef<{ player1: NodeJS.Timeout | null, player2: NodeJS.Timeout | null }>({ player1: null, player2: null });
     const toneSynth = useRef<Tone.Synth | null>(null);
     const playerToastId = useRef<string | null>(null);
 
@@ -80,8 +79,8 @@ export default function BattlePage() {
         setDecodedWords({ player1: '', player2: '' });
         setLetterIndices({ player1: 0, player2: 0 });
         setIsComplete(false);
-        setActivePlayer(null);
-        if (letterTimeout.current) clearTimeout(letterTimeout.current);
+        if (letterTimeouts.current.player1) clearTimeout(letterTimeouts.current.player1);
+        if (letterTimeouts.current.player2) clearTimeout(letterTimeouts.current.player2);
     }, []);
 
     useEffect(() => {
@@ -89,7 +88,8 @@ export default function BattlePage() {
         getNewWord();
         return () => {
             toneSynth.current?.dispose();
-            if (letterTimeout.current) clearTimeout(letterTimeout.current);
+            if (letterTimeouts.current.player1) clearTimeout(letterTimeouts.current.player1);
+            if (letterTimeouts.current.player2) clearTimeout(letterTimeouts.current.player2);
         };
     }, [getNewWord]);
 
@@ -149,39 +149,41 @@ export default function BattlePage() {
 
     }, [word, playerInputs, letterIndices, decodedWords, players, scores, getNewWord, toast, highScore, dismiss]);
 
+     useEffect(() => {
+        if (letterTimeouts.current.player1) clearTimeout(letterTimeouts.current.player1);
+        if (playerInputs.player1 !== '') {
+            letterTimeouts.current.player1 = setTimeout(() => processInput(1), LETTER_PAUSE_MS);
+        }
+    }, [playerInputs.player1, processInput]);
+
     useEffect(() => {
-        if (letterTimeout.current) {
-            clearTimeout(letterTimeout.current);
+        if (letterTimeouts.current.player2) clearTimeout(letterTimeouts.current.player2);
+        if (playerInputs.player2 !== '') {
+            letterTimeouts.current.player2 = setTimeout(() => processInput(2), LETTER_PAUSE_MS);
         }
-        if (activePlayer && playerInputs[`player${activePlayer}`] !== '') {
-            letterTimeout.current = setTimeout(() => {
-                processInput(activePlayer);
-                setActivePlayer(null);
-            }, LETTER_PAUSE_MS);
-        }
-    }, [activePlayer, playerInputs, processInput]);
+    }, [playerInputs.player2, processInput]);
 
 
     const handlePressStart = async (player: Player) => {
         if (isComplete) return;
         
-        setActivePlayer(player);
-
         if (Tone.context.state !== 'running') {
             await Tone.start();
         }
-        if (letterTimeout.current) {
-            clearTimeout(letterTimeout.current);
+         const timeoutRef = letterTimeouts.current[`player${player}`];
+        if (timeoutRef) {
+            clearTimeout(timeoutRef);
         }
-        pressStart.current = Date.now();
+        pressStartTimes.current[`player${player}`] = Date.now();
         toneSynth.current?.triggerAttack("700hz");
     };
 
     const handlePressEnd = (player: Player) => {
-        if (isComplete || !pressStart.current || activePlayer !== player) return;
+        const pressStart = pressStartTimes.current[`player${player}`];
+        if (isComplete || !pressStart) return;
         
-        const pressDuration = Date.now() - pressStart.current;
-        pressStart.current = null;
+        const pressDuration = Date.now() - pressStart;
+        pressStartTimes.current[`player${player}`] = null;
         toneSynth.current?.triggerRelease();
 
         const symbol = pressDuration < SHORT_PRESS_MS ? '.' : '-';
@@ -298,3 +300,5 @@ export default function BattlePage() {
     );
 }
 
+
+    
