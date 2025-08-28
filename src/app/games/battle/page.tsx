@@ -41,10 +41,16 @@ export default function BattlePage() {
     const [player1Name, setPlayer1Name] = useState('');
     const [player2Name, setPlayer2Name] = useState('');
 
+    // Game Flow State
+    const [countdown, setCountdown] = useState<number | null>(null);
+    const [isRoundActive, setIsRoundActive] = useState(false);
+
     const pressStartTimes = useRef<{ player1: number | null, player2: number | null }>({ player1: null, player2: null });
-    const letterTimeouts = useRef<{ player1: NodeJS.Timeout | null, player2: NodeJS.Timeout | null }>({ player1: null, player2: null });
+    const letterTimeouts = useRef<{ player1: NodeJS.Timeout | null, player2: NodeJS.Timeout | null }>({ player1: null, player2: NodeJS.Timeout | null });
     const toneSynth = useRef<Tone.Synth | null>(null);
     const playerToastId = useRef<string | null>(null);
+    const countdownInterval = useRef<NodeJS.Timeout | null>(null);
+
 
     // Load players and high score from localStorage
     useEffect(() => {
@@ -73,15 +79,33 @@ export default function BattlePage() {
 
 
     const getNewWord = useCallback(() => {
+        setIsComplete(false);
+        setIsRoundActive(false);
+        if (playerToastId.current) dismiss(playerToastId.current);
+        if (countdownInterval.current) clearInterval(countdownInterval.current);
+
         const newWord = PRACTICE_WORDS[Math.floor(Math.random() * PRACTICE_WORDS.length)];
         setWord(newWord);
         setPlayerInputs({ player1: '', player2: '' });
         setDecodedWords({ player1: '', player2: '' });
         setLetterIndices({ player1: 0, player2: 0 });
-        setIsComplete(false);
+        
         if (letterTimeouts.current.player1) clearTimeout(letterTimeouts.current.player1);
         if (letterTimeouts.current.player2) clearTimeout(letterTimeouts.current.player2);
-    }, []);
+        
+        setCountdown(3);
+        countdownInterval.current = setInterval(() => {
+            setCountdown(prev => {
+                if (prev === null || prev <= 1) {
+                    clearInterval(countdownInterval.current!);
+                    setIsRoundActive(true);
+                    return null;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+    }, [dismiss]);
 
     useEffect(() => {
         toneSynth.current = new Tone.Synth().toDestination();
@@ -90,6 +114,7 @@ export default function BattlePage() {
             toneSynth.current?.dispose();
             if (letterTimeouts.current.player1) clearTimeout(letterTimeouts.current.player1);
             if (letterTimeouts.current.player2) clearTimeout(letterTimeouts.current.player2);
+            if (countdownInterval.current) clearInterval(countdownInterval.current);
         };
     }, [getNewWord]);
 
@@ -106,12 +131,11 @@ export default function BattlePage() {
         }
     };
 
-
-    const processInput = useCallback((player: Player) => {
+     const processInput = (player: Player) => {
         const currentInput = playerInputs[`player${player}`];
         const letterIndex = letterIndices[`player${player}`];
-        
-        if (!word || currentInput === '' || letterIndex >= word.length) return;
+
+        if (!word || currentInput === '' || letterIndex >= word.length || isComplete) return;
 
         const currentLetter = word[letterIndex];
         const correctCode = MORSE_CODE[currentLetter]?.code;
@@ -119,26 +143,32 @@ export default function BattlePage() {
         if (currentInput === correctCode) {
             const newDecodedWord = decodedWords[`player${player}`] + currentLetter;
             setDecodedWords(prev => ({ ...prev, [`player${player}`]: newDecodedWord }));
-            setLetterIndices(prev => ({ ...prev, [`player${player}`]: letterIndex + 1 }));
+            
+            const newIndex = letterIndex + 1;
+            setLetterIndices(prev => ({ ...prev, [`player${player}`]: newIndex }));
 
-            if (letterIndex + 1 === word.length) {
+            if (newIndex === word.length) {
                 setIsComplete(true);
+                setIsRoundActive(false);
                 const winnerName = players[`player${player}`];
-                const newScores = { ...scores, [`player${player}`]: scores[`player${player}`] + 1 };
-                setScores(newScores);
-
+                
+                setScores(currentScores => {
+                    const newScores = { ...currentScores, [`player${player}`]: currentScores[`player${player}`] + 1 };
+                    checkHighScore(winnerName, newScores[`player${player}`]);
+                    return newScores;
+                });
+                
                  if (playerToastId.current) {
                     dismiss(playerToastId.current);
                 }
+
                 const { id } = toast({
                     title: "¡Ronda Ganada!",
                     description: `¡${winnerName} ha ganado la ronda!`,
                     duration: 3000,
                 });
                 playerToastId.current = id;
-
-                checkHighScore(winnerName, newScores[`player${player}`]);
-
+                
                 setTimeout(getNewWord, 3000);
             }
         } else {
@@ -146,26 +176,24 @@ export default function BattlePage() {
         }
         
         setPlayerInputs(prev => ({...prev, [`player${player}`]: ''}));
+    }
 
-    }, [word, playerInputs, letterIndices, decodedWords, players, scores, getNewWord, toast, highScore, dismiss]);
-
-     useEffect(() => {
+    useEffect(() => {
         if (letterTimeouts.current.player1) clearTimeout(letterTimeouts.current.player1);
-        if (playerInputs.player1 !== '') {
+        if (playerInputs.player1 !== '' && isRoundActive) {
             letterTimeouts.current.player1 = setTimeout(() => processInput(1), LETTER_PAUSE_MS);
         }
-    }, [playerInputs.player1, processInput]);
+    }, [playerInputs.player1, isRoundActive]);
 
     useEffect(() => {
         if (letterTimeouts.current.player2) clearTimeout(letterTimeouts.current.player2);
-        if (playerInputs.player2 !== '') {
+        if (playerInputs.player2 !== '' && isRoundActive) {
             letterTimeouts.current.player2 = setTimeout(() => processInput(2), LETTER_PAUSE_MS);
         }
-    }, [playerInputs.player2, processInput]);
-
+    }, [playerInputs.player2, isRoundActive]);
 
     const handlePressStart = async (player: Player) => {
-        if (isComplete) return;
+        if (isComplete || !isRoundActive) return;
         
         if (Tone.context.state !== 'running') {
             await Tone.start();
@@ -180,7 +208,7 @@ export default function BattlePage() {
 
     const handlePressEnd = (player: Player) => {
         const pressStart = pressStartTimes.current[`player${player}`];
-        if (isComplete || !pressStart) return;
+        if (isComplete || !isRoundActive || !pressStart) return;
         
         const pressDuration = Date.now() - pressStart;
         pressStartTimes.current[`player${player}`] = null;
@@ -193,6 +221,8 @@ export default function BattlePage() {
     const currentInputForPlayer = (player: Player) => {
         return `${decodedWords[`player${player}`]}<span class="text-primary animate-pulse">${playerInputs[`player${player}`]}</span>`;
     }
+
+    const isInputDisabled = !isRoundActive || isComplete;
 
     return (
         <main className="flex flex-col items-center justify-center min-h-screen p-4">
@@ -252,10 +282,19 @@ export default function BattlePage() {
                         </div>
                     </div>
 
-                    <div className="w-full p-4 border rounded-lg bg-muted min-h-[100px] flex flex-col justify-center items-center text-center">
-                        <p className="text-sm text-muted-foreground">PALABRA A ESCRIBIR</p>
-                        <p className="text-5xl font-bold tracking-widest font-headline">{word}</p>
+                    <div className="w-full p-4 border rounded-lg bg-muted min-h-[100px] flex flex-col justify-center items-center text-center relative">
+                        {countdown !== null ? (
+                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+                                <span className="text-8xl font-bold text-white animate-ping">{countdown}</span>
+                            </div>
+                        ) : (
+                            <>
+                                <p className="text-sm text-muted-foreground">PALABRA A ESCRIBIR</p>
+                                <p className="text-5xl font-bold tracking-widest font-headline">{word}</p>
+                            </>
+                        )}
                     </div>
+
 
                      <div className="w-full grid grid-cols-2 gap-4">
                         {([1, 2] as const).map(pNum => (
@@ -280,7 +319,7 @@ export default function BattlePage() {
                                     pNum === 1 ? 'bg-blue-600 hover:bg-blue-600/90' : 'bg-red-600 hover:bg-red-600/90',
                                     'text-white'
                                 )}
-                                disabled={isComplete}
+                                disabled={isInputDisabled}
                             >
                                 <Trophy className="w-8 h-8 mr-4" />
                                 {players[`player${pNum}`]}
@@ -299,6 +338,5 @@ export default function BattlePage() {
         </main>
     );
 }
-
 
     
