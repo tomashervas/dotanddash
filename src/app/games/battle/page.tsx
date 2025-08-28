@@ -123,7 +123,8 @@ export default function BattlePage() {
             if (letterTimeouts.current.player2) clearTimeout(letterTimeouts.current.player2);
             if (countdownInterval.current) clearInterval(countdownInterval.current);
         };
-    }, [getNewWord]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const checkHighScore = (winnerName: string, winnerScore: number) => {
         if (!highScore || winnerScore > highScore.score) {
@@ -138,7 +139,7 @@ export default function BattlePage() {
         }
     };
 
-     const processInput = (player: Player) => {
+     const processInput = useCallback((player: Player) => {
         if (isComplete) return;
 
         setPlayerInputs(currentInputs => {
@@ -186,8 +187,6 @@ export default function BattlePage() {
                     
                     return { ...currentIndices, [`player${player}`]: newIndex };
 
-                } else {
-                    toneSynth.current?.triggerAttackRelease("C3", "2n");
                 }
                 
                 return currentIndices;
@@ -195,7 +194,7 @@ export default function BattlePage() {
 
             return { ...currentInputs, [`player${player}`]: '' };
         });
-    }
+    }, [isComplete, word, players, dismiss, toast, getNewWord, highScore]);
 
     useEffect(() => {
         if (letterTimeouts.current.player1) clearTimeout(letterTimeouts.current.player1);
@@ -358,3 +357,5 @@ export default function BattlePage() {
         </main>
     );
 }
+
+    
