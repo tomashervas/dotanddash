@@ -37,7 +37,7 @@ export default function BattlePage() {
     const [highScore, setHighScore] = useState<HighScore | null>(null);
 
     // Modal state
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(true);
     const [player1Name, setPlayer1Name] = useState('');
     const [player2Name, setPlayer2Name] = useState('');
 
@@ -46,10 +46,10 @@ export default function BattlePage() {
     const [isRoundActive, setIsRoundActive] = useState(false);
 
     const pressStartTimes = useRef<{ player1: number | null, player2: number | null }>({ player1: null, player2: null });
-    const letterTimeouts = useRef<{ player1: NodeJS.Timeout | null, player2: NodeJS.Timeout | null }>({ player1: null, player2: NodeJS.Timeout | null });
+    const letterTimeouts = useRef<{ player1: ReturnType<typeof setTimeout> | null, player2: ReturnType<typeof setTimeout> | null }>({ player1: null, player2: null });
     const toneSynth = useRef<Tone.Synth | null>(null);
     const playerToastId = useRef<string | null>(null);
-    const countdownInterval = useRef<NodeJS.Timeout | null>(null);
+    const countdownInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
 
     // Load players and high score from localStorage
@@ -58,6 +58,7 @@ export default function BattlePage() {
         const p2 = localStorage.getItem('dotanddash_player2');
         if (p1 && p2) {
             setPlayers({ player1: p1, player2: p2 });
+            setIsModalOpen(false);
         } else {
             setIsModalOpen(true);
         }
@@ -74,6 +75,7 @@ export default function BattlePage() {
             localStorage.setItem('dotanddash_player2', player2Name);
             setPlayers({ player1: player1Name, player2: player2Name });
             setIsModalOpen(false);
+            getNewWord();
         }
     };
 
@@ -109,7 +111,12 @@ export default function BattlePage() {
 
     useEffect(() => {
         toneSynth.current = new Tone.Synth().toDestination();
-        getNewWord();
+        const p1 = localStorage.getItem('dotanddash_player1');
+        const p2 = localStorage.getItem('dotanddash_player2');
+        if(p1 && p2){
+            getNewWord();
+        }
+
         return () => {
             toneSynth.current?.dispose();
             if (letterTimeouts.current.player1) clearTimeout(letterTimeouts.current.player1);
@@ -132,50 +139,62 @@ export default function BattlePage() {
     };
 
      const processInput = (player: Player) => {
-        const currentInput = playerInputs[`player${player}`];
-        const letterIndex = letterIndices[`player${player}`];
+        if (isComplete) return;
 
-        if (!word || currentInput === '' || letterIndex >= word.length || isComplete) return;
-
-        const currentLetter = word[letterIndex];
-        const correctCode = MORSE_CODE[currentLetter]?.code;
-
-        if (currentInput === correctCode) {
-            const newDecodedWord = decodedWords[`player${player}`] + currentLetter;
-            setDecodedWords(prev => ({ ...prev, [`player${player}`]: newDecodedWord }));
+        setPlayerInputs(currentInputs => {
+            const currentInput = currentInputs[`player${player}`];
             
-            const newIndex = letterIndex + 1;
-            setLetterIndices(prev => ({ ...prev, [`player${player}`]: newIndex }));
-
-            if (newIndex === word.length) {
-                setIsComplete(true);
-                setIsRoundActive(false);
-                const winnerName = players[`player${player}`];
+            setLetterIndices(currentIndices => {
+                const letterIndex = currentIndices[`player${player}`];
                 
-                setScores(currentScores => {
-                    const newScores = { ...currentScores, [`player${player}`]: currentScores[`player${player}`] + 1 };
-                    checkHighScore(winnerName, newScores[`player${player}`]);
-                    return newScores;
-                });
-                
-                 if (playerToastId.current) {
-                    dismiss(playerToastId.current);
+                if (!word || currentInput === '' || letterIndex >= word.length) {
+                    return currentIndices;
                 }
 
-                const { id } = toast({
-                    title: "¡Ronda Ganada!",
-                    description: `¡${winnerName} ha ganado la ronda!`,
-                    duration: 3000,
-                });
-                playerToastId.current = id;
+                const currentLetter = word[letterIndex];
+                const correctCode = MORSE_CODE[currentLetter]?.code;
+
+                if (currentInput === correctCode) {
+                    setDecodedWords(prev => ({ ...prev, [`player${player}`]: prev[`player${player}`] + currentLetter }));
+                    
+                    const newIndex = letterIndex + 1;
+                    
+                    if (newIndex === word.length) {
+                        setIsComplete(true);
+                        setIsRoundActive(false);
+                        const winnerName = players[`player${player}`];
+                        
+                        setScores(currentScores => {
+                            const newScores = { ...currentScores, [`player${player}`]: currentScores[`player${player}`] + 1 };
+                            checkHighScore(winnerName, newScores[`player${player}`]);
+                            return newScores;
+                        });
+                        
+                        if (playerToastId.current) {
+                            dismiss(playerToastId.current);
+                        }
+
+                        const { id } = toast({
+                            title: "¡Ronda Ganada!",
+                            description: `¡${winnerName} ha ganado la ronda!`,
+                            duration: 3000,
+                        });
+                        playerToastId.current = id;
+                        
+                        setTimeout(getNewWord, 3000);
+                    }
+                    
+                    return { ...currentIndices, [`player${player}`]: newIndex };
+
+                } else {
+                    toneSynth.current?.triggerAttackRelease("C3", "2n");
+                }
                 
-                setTimeout(getNewWord, 3000);
-            }
-        } else {
-             toneSynth.current?.triggerAttackRelease("C3", "2n");
-        }
-        
-        setPlayerInputs(prev => ({...prev, [`player${player}`]: ''}));
+                return currentIndices;
+            });
+
+            return { ...currentInputs, [`player${player}`]: '' };
+        });
     }
 
     useEffect(() => {
@@ -183,14 +202,14 @@ export default function BattlePage() {
         if (playerInputs.player1 !== '' && isRoundActive) {
             letterTimeouts.current.player1 = setTimeout(() => processInput(1), LETTER_PAUSE_MS);
         }
-    }, [playerInputs.player1, isRoundActive]);
+    }, [playerInputs.player1, isRoundActive, processInput]);
 
     useEffect(() => {
         if (letterTimeouts.current.player2) clearTimeout(letterTimeouts.current.player2);
         if (playerInputs.player2 !== '' && isRoundActive) {
             letterTimeouts.current.player2 = setTimeout(() => processInput(2), LETTER_PAUSE_MS);
         }
-    }, [playerInputs.player2, isRoundActive]);
+    }, [playerInputs.player2, isRoundActive, processInput]);
 
     const handlePressStart = async (player: Player) => {
         if (isComplete || !isRoundActive) return;
@@ -201,6 +220,7 @@ export default function BattlePage() {
          const timeoutRef = letterTimeouts.current[`player${player}`];
         if (timeoutRef) {
             clearTimeout(timeoutRef);
+            letterTimeouts.current[`player${player}`] = null;
         }
         pressStartTimes.current[`player${player}`] = Date.now();
         toneSynth.current?.triggerAttack("700hz");
@@ -284,7 +304,7 @@ export default function BattlePage() {
 
                     <div className="w-full p-4 border rounded-lg bg-muted min-h-[100px] flex flex-col justify-center items-center text-center relative">
                         {countdown !== null ? (
-                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10 rounded-lg">
                                 <span className="text-8xl font-bold text-white animate-ping">{countdown}</span>
                             </div>
                         ) : (
@@ -338,5 +358,3 @@ export default function BattlePage() {
         </main>
     );
 }
-
-    
